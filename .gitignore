@@ -1,0 +1,21 @@
+# Environment & Home Directory System Files
+.*
+!.gitignore
+!.nojekyll
+
+# Dependencies & Logs
+node_modules/
+.env
+.env.*
+.DS_Store
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary folders
+tmp/
+temp/
+
+# Tender confidential source documents (Marsa Maroc 12/DEPA/2026)
+docs-sources/

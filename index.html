@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SME Marsa Maroc — Port d'Agadir (AO 12/DEPA/2026)</title>
+  
+  <!-- Feuilles de style locales -->
+  <link rel="stylesheet" href="./css/main.css">
+  <link rel="stylesheet" href="./css/scada-theme.css">
+  <link rel="stylesheet" href="./css/print.css" media="print">
+  
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+</head>
+<body>
+
+  <!-- BANDEAU PERMANENT D'HONNÊTETÉ DES DONNÉES -->
+  <div class="demo-banner">
+    <div class="banner-badge">
+      <span class="banner-pulse"></span>
+      <span>DONNÉES SIMULÉES — DÉMONSTRATION TECHNIQUE</span>
+    </div>
+    <div style="font-size: 11px; opacity: 0.9; display: none; @media(min-width: 900px){display:block;}">
+      Appel d'Offres Marsa Maroc n° 12/DEPA/2026 (Port d'Agadir) — ISO 50001
+    </div>
+    <div class="banner-actions">
+      <button class="btn-banner" id="btn-reset-quick" title="Remise à zéro des alertes et défauts">
+        🔄 Réinitialiser la Démo
+      </button>
+      <a href="./tests.html" class="btn-banner" style="text-decoration: none;" target="_blank">
+        🧪 Tests Automatisés
+      </a>
+    </div>
+  </div>
+
+  <!-- LAYOUT PRINCIPAL -->
+  <div class="app-container">
+    
+    <!-- BARRE LATÉRALE DE NAVIGATION (SIDEBAR) -->
+    <aside class="app-sidebar">
+      <div class="sidebar-header">
+        <div class="app-logo">MM</div>
+        <div class="app-title-group">
+          <h1>SME Marsa Maroc</h1>
+          <p>Port d'Agadir — DEPA</p>
+        </div>
+      </div>
+
+      <!-- Liens de navigation générés dynamiquement par nav.js -->
+      <nav class="sidebar-nav" id="sidebar-nav"></nav>
+
+      <!-- Profil utilisateur connecté et sélecteur de rôle -->
+      <div class="sidebar-footer" id="sidebar-user-widget"></div>
+    </aside>
+
+    <!-- ZONE DE CONTENU PRINCIPALE -->
+    <main class="app-main">
+      
+      <!-- TOPBAR D'ACTIONS & PILOTAGE SIMULATION -->
+      <header class="app-topbar">
+        <div class="topbar-left">
+          <div>
+            <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px;">
+              Supervision Énergétique Industrielle
+            </div>
+            <div style="font-size: 13px; font-weight: 600; color: var(--color-primary);">
+              Système de Monitoring Énergétique (SME)
+            </div>
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <!-- Contrôle de vitesse temporelle -->
+          <div class="sim-controls">
+            <span class="sim-label">Vitesse :</span>
+            <button class="sim-speed-btn active" id="sim-speed-1" title="Vitesse normale temps réel">x1</button>
+            <button class="sim-speed-btn" id="sim-speed-10" title="Accélération x10">x10</button>
+            <button class="sim-speed-btn" id="sim-speed-60" title="Accélération x60 (1 min = 1 sec)">x60</button>
+          </div>
+
+          <!-- Bouton Injection de Défauts -->
+          <button class="btn-fault" id="btn-fault-modal" title="Simuler une coupure ou une dérive">
+            <span>⚡</span>
+            <span>Injecter Défaut</span>
+          </button>
+
+          <!-- Bascule Thème Clair / Sombre -->
+          <button class="theme-toggle-btn" id="btn-theme-toggle" title="Basculer thème clair/sombre">
+            ☀️
+          </button>
+        </div>
+      </header>
+
+      <!-- VUE DYNAMIQUE DE LA ROUTE EN COURS -->
+      <section class="page-view" id="page-view-container">
+        <!-- Rempli dynamiquement par le routeur hash -->
+      </section>
+
+    </main>
+  </div>
+
+  <!-- TOASTS DE NOTIFICATION SCADA -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Bibliothèques locales (aucune dépendance CDN externe) -->
+  <script src="./vendor/chart.umd.min.js"></script>
+
+  <!-- Point d'entrée de l'application ES Modules -->
+  <script type="module" src="./js/app.js"></script>
+
+</body>
+</html>

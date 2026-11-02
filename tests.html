@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tests Automatisés SME — Marsa Maroc (12/DEPA/2026)</title>
+  <link rel="stylesheet" href="./css/main.css">
+  <link rel="stylesheet" href="./css/scada-theme.css">
+  <style>
+    body { overflow-y: auto; padding: 24px; }
+    .test-suite { margin-bottom: 24px; }
+    .test-case {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 13px;
+    }
+    .test-case:last-child { border-bottom: none; }
+    .test-pass { color: var(--color-success); font-weight: 700; }
+    .test-fail { color: var(--color-danger); font-weight: 700; }
+    .test-assert { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+
+  <div style="max-width: 900px; margin: 0 auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+      <div>
+        <h1 style="font-size: 20px; font-weight: 800; color: var(--color-primary);">
+          🧪 Suite de Tests Automatisés — Système de Monitoring Énergétique (SME)
+        </h1>
+        <p style="font-size: 12px; color: var(--text-secondary);">
+          Validation sans build (vanilla ES Modules) des conversions, anti-double comptage, calculs IPE, SER et règles d'alertes.
+        </p>
+      </div>
+      <div>
+        <a href="./index.html" class="btn btn-secondary">⬅ Retour à la Supervision</a>
+        <button class="btn btn-primary" id="btn-rerun">🔄 Relancer les Tests</button>
+      </div>
+    </div>
+
+    <!-- RÉSUMÉ DU SCORE -->
+    <div class="card" style="margin-bottom: 24px; display: flex; justify-content: space-around; text-align: center;">
+      <div>
+        <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Tests Exécutés</span>
+        <div style="font-size: 24px; font-weight: 800; font-family: var(--font-mono);" id="total-tests">0</div>
+      </div>
+      <div>
+        <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Succès</span>
+        <div style="font-size: 24px; font-weight: 800; font-family: var(--font-mono); color: var(--color-success);" id="passed-tests">0</div>
+      </div>
+      <div>
+        <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Échecs</span>
+        <div style="font-size: 24px; font-weight: 800; font-family: var(--font-mono); color: var(--color-danger);" id="failed-tests">0</div>
+      </div>
+      <div>
+        <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Taux de Conformité</span>
+        <div style="font-size: 24px; font-weight: 800; font-family: var(--font-mono);" id="score-percent">100%</div>
+      </div>
+    </div>
+
+    <!-- CONTENEUR DES RÉSULTATS DES SUITES DE TESTS -->
+    <div id="test-results-container"></div>
+  </div>
+
+  <script type="module">
+    import { Store } from "./js/storage/store.js";
+    import { MetrologyEngine } from "./js/calculs/metrologie.js";
+    import { AggregationEngine } from "./js/calculs/aggregations.js";
+    import { IPEManager } from "./js/calculs/ipe.js";
+    import { SERManager } from "./js/calculs/ser.js";
+    import { AlertManager } from "./js/alertes/alertManager.js";
+    import { ModbusTCPSimulator } from "./js/simulation/modbus.js";
+    import { FaultInjector } from "./js/simulation/faults.js";
+
+    // Initialisation
+    Store.init();
+
+    class TestRunner {
+      constructor() {
+        this.total = 0;
+        this.passed = 0;
+        this.failed = 0;
+        this.suites = [];
+      }
+
+      suite(name, fn) {
+        const currentSuite = { name, tests: [] };
+        this.suites.push(currentSuite);
+        fn((description, assertFn) => {
+          this.total++;
+          try {
+            assertFn();
+            this.passed++;
+            currentSuite.tests.push({ description, pass: true });
+          } catch (err) {
+            this.failed++;
+            currentSuite.tests.push({ description, pass: false, error: err.message });
+          }
+        });
+      }
+
+      render() {
+        document.getElementById("total-tests").textContent = this.total;
+        document.getElementById("passed-tests").textContent = this.passed;
+        document.getElementById("failed-tests").textContent = this.failed;
+        const pct = Math.round((this.passed / this.total) * 100);
+        document.getElementById("score-percent").textContent = `${pct}%`;
+
+        const container = document.getElementById("test-results-container");
+        container.innerHTML = this.suites.map(s => `
+          <div class="card test-suite">
+            <div class="card-header">
+              <h3 class="card-title">${s.name}</h3>
+              <span class="status-pill ${s.tests.every(t => t.pass) ? 'status-ok' : 'status-danger'}">
+                ${s.tests.filter(t => t.pass).length} / ${s.tests.length} OK
+              </span>
+            </div>
+            <div>
+              ${s.tests.map(t => `
+                <div class="test-case">
+                  <div>
+                    <span>${t.description}</span>
+                    ${t.error ? `<div class="test-assert" style="color: var(--color-danger);">${t.error}</div>` : ''}
+                  </div>
+                  <span class="${t.pass ? 'test-pass' : 'test-fail'}">${t.pass ? '✓ SUCCÈS' : '✗ ÉCHEC'}</span>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        `).join("");
+      }
+    }
+
+    function assert(condition, message) {
+      if (!condition) throw new Error(message || "Assertion échouée");
+    }
+
+    function runAllTests() {
+      const runner = new TestRunner();
+
+      // SUITE 1 : CONVERSIONS & MÉTROLOGIE MODBUS
+      runner.suite("Suite 1 : Métrologie & Encodage Modbus (IEEE 754 Big-Endian)", (it) => {
+        it("Conversion d'un flottant en registres Modbus 16 bits et réversibilité exacte", () => {
+          const original = 482.5;
+          const [r1, r2] = ModbusTCPSimulator.float32ToRegisters(original);
+          assert(r1 !== undefined && r2 !== undefined, "Les deux registres doivent être définis");
+          const restored = ModbusTCPSimulator.registersToFloat32(r1, r2);
+          assert(Math.abs(restored - original) < 0.001, `Valeur reconstituée ${restored} != ${original}`);
+        });
+
+        it("Formatage automatique des puissances kW vers MW", () => {
+          const res1 = MetrologyEngine.formatPower(450.0);
+          assert(res1.unit === "kW" && res1.val === "450.0", "450 kW doit rester en kW");
+          const res2 = MetrologyEngine.formatPower(2500.0);
+          assert(res2.unit === "MW" && res2.val === "2.50", "2500 kW doit devenir 2.50 MW");
+        });
+
+        it("Formatage automatique de l'énergie kWh vers MWh", () => {
+          const res1 = MetrologyEngine.formatEnergy(350000);
+          assert(res1.unit === "MWh" && res1.val === "350.00", "350 000 kWh doit devenir 350.00 MWh");
+        });
+
+        it("Vérification conformité classe 0.5S pour arrivée et classe 1 pour départ", () => {
+          const cArrivee = MetrologyEngine.checkPrecisionCompliance("0.5S", "ARRIVEE");
+          assert(cArrivee.conforme === true, "Classe 0.5S doit être conforme en tête de poste");
+          const cDepart = MetrologyEngine.checkPrecisionCompliance("1", "DEPART");
+          assert(cDepart.conforme === true, "Classe 1 doit être conforme en départ");
+          const cInvalide = MetrologyEngine.checkPrecisionCompliance("2", "ARRIVEE");
+          assert(cInvalide.conforme === false, "Classe 2 doit être rejetée pour une arrivée");
+        });
+      });
+
+      // SUITE 2 : CONTRÔLE CERTIFIÉ ANTI-DOUBLE COMPTAGE
+      runner.suite("Suite 2 : Contrôle Strict Anti-Double Comptage", (it) => {
+        it("Le bilan total du poste n'additionne JAMAIS les arrivées ET les départs", () => {
+          // Créer un dictionnaire de mesures simulées
+          const mockTelemetry = new Map();
+          // Poste 1 : Arrivée = 400 kW, Départ Grues = 250 kW, Départ Pompes = 100 kW
+          mockTelemetry.set("CPT_P1_01", { compteurId: "CPT_P1_01", posteId: "P1", valeurs: { P_ACTIVE: 400.0, P_REACTIVE: 120.0, EA_IMPORT: 50000, COS_PHI: 0.95 }, qualite: "OK" });
+          mockTelemetry.set("CPT_P1_02", { compteurId: "CPT_P1_02", posteId: "P1", valeurs: { P_ACTIVE: 250.0, P_REACTIVE: 70.0, EA_IMPORT: 30000, COS_PHI: 0.94 }, qualite: "OK" });
+          mockTelemetry.set("CPT_P1_03", { compteurId: "CPT_P1_03", posteId: "P1", valeurs: { P_ACTIVE: 100.0, P_REACTIVE: 30.0, EA_IMPORT: 15000, COS_PHI: 0.95 }, qualite: "OK" });
+
+          const bilan = AggregationEngine.getPosteBilan("P1", mockTelemetry);
+          assert(bilan !== null, "Le bilan doit être calculé");
+          // Si on additionnait tout, ce serait 400 + 250 + 100 = 750 kW (ERREUR MAJEURE DE DOUBLE COMPTAGE)
+          // La valeur exacte doit être STRICTEMENT l'arrivée : 400 kW
+          assert(bilan.puissanceActiveKW === 400.0, `La puissance retenue (${bilan.puissanceActiveKW} kW) doit être égale à l'arrivée (400 kW)`);
+          assert(bilan.verificationAntiDoubleComptage.doubleComptageEvite === true, "Le flag anti-double comptage doit être validé");
+          assert(bilan.verificationAntiDoubleComptage.totalSousComptageDepartsKW === 350.0, "La somme analytique des départs doit être 350 kW");
+        });
+      });
+
+      // SUITE 3 : INDICATEURS DE PERFORMANCE ÉNERGÉTIQUE (ISO 50001)
+      runner.suite("Suite 3 : Calcul des Indicateurs IPE (ISO 50001)", (it) => {
+        it("Évaluation nominale de l'IPE-01 avec données complètes", () => {
+          const ipes = Store.get("ipes", []);
+          const ipe01 = ipes.find(i => i.code === "IPE-01");
+          assert(ipe01 !== undefined, "IPE-01 doit être défini dans les seeds");
+          const mockTelemP5 = new Map();
+          mockTelemP5.set("CPT_P5_01", { compteurId: "CPT_P5_01", posteId: "P5", qualite: "OK", valeurs: { P_ACTIVE: 800, EA_IMPORT: 12000 } });
+          mockTelemP5.set("CPT_P5_02", { compteurId: "CPT_P5_02", posteId: "P5", qualite: "OK", valeurs: { P_ACTIVE: 500, EA_IMPORT: 7000 } });
+          mockTelemP5.set("CPT_P5_03", { compteurId: "CPT_P5_03", posteId: "P5", qualite: "OK", valeurs: { P_ACTIVE: 300, EA_IMPORT: 5000 } });
+          const res = IPEManager.evaluateIPE(ipe01, mockTelemP5, { evpTraitesJour: 400, tonnesVracJour: 5000, tempExtMoyenneC: 22 });
+          assert(res.valeur > 0, "La valeur de l'IPE doit être positive");
+          assert(res.tauxCompletude === 100, "Le taux de complétude doit être de 100%");
+          assert(res.qualiteCalcul === "VALIDE", "Le statut de calcul doit être VALIDE");
+        });
+
+        it("Traitement des données manquantes selon la politique stricte de rejet", () => {
+          const ipeRejet = {
+            id: "TEST_REJET",
+            code: "IPE-TEST",
+            nom: "Test Rejet",
+            postesInclus: ["P1"],
+            cibleISO: 10,
+            traitementManquant: "REJET_SI_LACUNE"
+          };
+          // Simuler un compteur P1 manquant
+          const mockTelemetry = new Map();
+          mockTelemetry.set("CPT_P1_01", { qualite: "ABSENTE" });
+          mockTelemetry.set("CPT_P1_02", { qualite: "ABSENTE" });
+
+          const res = IPEManager.evaluateIPE(ipeRejet, mockTelemetry);
+          assert(res.statut === "INVALIDE_LACUNE", "L'IPE doit basculer en statut INVALIDE_LACUNE");
+          assert(res.valeur === null, "La valeur calculée doit être nulle en cas de rejet");
+        });
+      });
+
+      // SUITE 4 : SITUATION ÉNERGÉTIQUE DE RÉFÉRENCE (SER)
+      runner.suite("Suite 4 : Modélisation SER & Baseline ISO 50006", (it) => {
+        it("Calcul exact de la formule de régression multi-variable", () => {
+          const configSER = {
+            coefficients: {
+              alphaEVP: 20.0,
+              betaTonnage: 2.0,
+              gammaTemp: 10.0,
+              baseFixeE0: 5000.0
+            }
+          };
+          // E_theorique = 20*100 + 2*1000 + 10*20 + 5000 = 2000 + 2000 + 200 + 5000 = 9200 kWh
+          const baseline = SERManager.computeBaselineKWh(configSER, 100, 1000, 20);
+          assert(baseline === 9200, `Calcul baseline ${baseline} != 9200`);
+        });
+
+        it("Ajout d'une révision SER avec motif obligatoire et traçabilité", () => {
+          const motif = "Test Recalibrage étalonnage contradictoire";
+          const res = SERManager.addRevision(motif, { alphaEVP: 25.0 });
+          const lastVersion = res.versions[res.versions.length - 1];
+          assert(lastVersion.motif === motif, "Le motif doit être consigné");
+          assert(res.coefficients.alphaEVP === 25.0, "Le nouveau coefficient doit être persisté");
+        });
+      });
+
+      // SUITE 5 : RÈGLES D'ALARMES ET CYCLE DE VIE SCADA
+      runner.suite("Suite 5 : Règles d'Alarmes & Cycle de Vie SCADA", (it) => {
+        it("Cycle de vie complet : Prise en charge avec commentaire puis Clôture", () => {
+          const alerts = Store.get("alerts", []);
+          const testAlert = alerts[0];
+          assert(testAlert !== undefined, "Une alerte doit exister dans les seeds");
+
+          // Forcer utilisateur Admin
+          Store.setCurrentUser("admin");
+
+          // 1. Prise en charge
+          const ackRes = AlertManager.acknowledgeAlert(testAlert.id, "Opérateur en cours d'inspection");
+          assert(ackRes.success === true, "La prise en charge doit réussir");
+          assert(ackRes.alert.statut === "PRISE_EN_CHARGE", "Le statut doit être PRISE_EN_CHARGE");
+
+          // 2. Clôture
+          const closeRes = AlertManager.closeAlert(testAlert.id, "Incident clos avec succès");
+          assert(closeRes.success === true, "La clôture doit réussir");
+          assert(closeRes.alert.statut === "CLOTUREE", "Le statut doit être CLOTUREE");
+        });
+
+        it("Vérification du principe du moindre privilège : Le Lecteur ne peut pas acquitter", () => {
+          Store.setCurrentUser("viewer"); // Profil Lecteur
+          const alerts = Store.get("alerts", []);
+          const res = AlertManager.acknowledgeAlert(alerts[0].id, "Tentative lecteur");
+          assert(res.success === false, "L'acquittement doit être rejeté pour le profil Lecteur");
+          // Rebasculer en Admin
+          Store.setCurrentUser("admin");
+        });
+      });
+
+      // SUITE 6 : INTÉGRITÉ DU BUFFER & REPRISE SANS DOUBLONS
+      runner.suite("Suite 6 : Intégrité des Séries Temporelles & Anti-Doublons", (it) => {
+        it("Vidange de buffer : les points réintégrés ne créent aucun doublon d'horodatage", () => {
+          const ts1 = "2026-11-02T10:00:00.000Z";
+          const ts2 = "2026-11-02T10:05:00.000Z";
+          const ts3 = "2026-11-02T10:10:00.000Z";
+
+          const existingHistory = [
+            { horodatageMesure: ts1, valeurs: { P_ACTIVE: 300 } },
+            { horodatageMesure: ts2, valeurs: { P_ACTIVE: 320 } }
+          ];
+
+          // Simuler un buffer contenant ts2 (déjà existant) et ts3 (nouveau point)
+          const simConfig = Store.get("sim_config", {});
+          simConfig.defauts = {
+            "TEST_METER": {
+              type: "COMM_CUT",
+              buffer: [
+                { horodatageMesure: ts2, valeurs: { P_ACTIVE: 320 } },
+                { horodatageMesure: ts3, valeurs: { P_ACTIVE: 340 } }
+              ]
+            }
+          };
+          Store.set("sim_config", simConfig);
+
+          const res = FaultInjector.replayBufferWithoutDuplicates("TEST_METER", existingHistory);
+          assert(res.replayedCount === 1, `1 seul point (ts3) doit être réintégré (reçu: ${res.replayedCount})`);
+          assert(res.duplicatesBlocked === 1, `1 doublon (ts2) doit être bloqué (reçu: ${res.duplicatesBlocked})`);
+          assert(existingHistory.length === 3, "L'historique final doit contenir exactement 3 points sans doublon");
+        });
+      });
+
+      runner.render();
+    }
+
+    document.getElementById("btn-rerun").addEventListener("click", () => runAllTests());
+    runAllTests();
+  </script>
+</body>
+</html>

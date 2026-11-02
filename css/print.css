@@ -1,0 +1,99 @@
+/* print.css - Dedicated stylesheet for PDF/paper report export */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 15mm;
+  }
+  
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11pt !important;
+    overflow: visible !important;
+  }
+
+  /* Hide navigation, banner, top controls, buttons */
+  .demo-banner,
+  .app-sidebar,
+  .app-topbar,
+  .toast-container,
+  .btn,
+  .no-print,
+  .sim-controls,
+  .theme-toggle-btn {
+    display: none !important;
+  }
+
+  .app-container, .app-main, .page-view {
+    display: block !important;
+    height: auto !important;
+    width: 100% !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+  }
+
+  .card {
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+    background: #fff !important;
+    page-break-inside: avoid;
+    margin-bottom: 15mm !important;
+  }
+
+  /* Marsa Maroc Official Report Header for Print */
+  .print-only-header {
+    display: block !important;
+    border-bottom: 2px solid #0284c7;
+    padding-bottom: 8mm;
+    margin-bottom: 10mm;
+  }
+
+  .print-title {
+    font-size: 16pt;
+    font-weight: bold;
+    color: #0369a1;
+  }
+
+  .print-subtitle {
+    font-size: 10pt;
+    color: #555;
+  }
+
+  .data-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 9pt !important;
+  }
+
+  .data-table th, .data-table td {
+    border: 1px solid #999 !important;
+    padding: 6px 8px !important;
+    color: #000 !important;
+  }
+
+  .data-table th {
+    background: #eee !important;
+  }
+
+  .print-signature-box {
+    display: flex !important;
+    justify-content: space-between;
+    margin-top: 15mm;
+    page-break-inside: avoid;
+  }
+
+  .signature-block {
+    width: 45%;
+    border-top: 1px dashed #666;
+    padding-top: 5mm;
+    text-align: center;
+    font-size: 10pt;
+  }
+}
+
+/* Screen default: print header is hidden */
+.print-only-header, .print-signature-box {
+  display: none;
+}

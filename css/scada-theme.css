@@ -1,0 +1,202 @@
+/* scada-theme.css - Dark and Light Industrial Themes */
+
+/* DARK THEME (Default SCADA supervision style) */
+[data-theme="dark"] {
+  --bg-main: #0c121e;
+  --bg-sidebar: #090e17;
+  --bg-sidebar-footer: #060910;
+  --bg-card: #131c2e;
+  --bg-hover: #1c2942;
+  --bg-active: rgba(2, 132, 199, 0.18);
+  --bg-input: #0c1424;
+  --bg-table-th: #0f172a;
+  
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  
+  --border-color: #1e293b;
+  --focus-ring: rgba(56, 189, 248, 0.35);
+  
+  --color-primary: #0284c7;
+  --color-primary-hover: #0369a1;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-offline: #64748b;
+  --color-modbus: #06b6d4;
+  
+  --banner-bg: #451a03;
+  --banner-text: #fef3c7;
+  --banner-border: #78350f;
+  
+  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.35);
+  --chart-grid: rgba(255, 255, 255, 0.08);
+  --chart-text: #94a3b8;
+}
+
+/* LIGHT THEME (Clean engineering / print style) */
+[data-theme="light"] {
+  --bg-main: #f8fafc;
+  --bg-sidebar: #f1f5f9;
+  --bg-sidebar-footer: #e2e8f0;
+  --bg-card: #ffffff;
+  --bg-hover: #e2e8f0;
+  --bg-active: rgba(2, 132, 199, 0.12);
+  --bg-input: #ffffff;
+  --bg-table-th: #f1f5f9;
+  
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  
+  --border-color: #cbd5e1;
+  --focus-ring: rgba(2, 132, 199, 0.25);
+  
+  --color-primary: #0284c7;
+  --color-primary-hover: #0369a1;
+  --color-success: #059669;
+  --color-warning: #d97706;
+  --color-danger: #dc2626;
+  --color-offline: #94a3b8;
+  --color-modbus: #0891b2;
+  
+  --banner-bg: #fffbeb;
+  --banner-text: #92400e;
+  --banner-border: #fde68a;
+  
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --chart-grid: rgba(0, 0, 0, 0.06);
+  --chart-text: #475569;
+}
+
+/* SCADA Specific Component Aesthetics */
+.scada-kpi {
+  display: flex;
+  flex-direction: column;
+  padding: 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  position: relative;
+  overflow: hidden;
+}
+
+.scada-kpi::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; width: 4px; height: 100%;
+  background: var(--kpi-color, var(--color-primary));
+}
+
+.scada-kpi.kpi-success { --kpi-color: var(--color-success); }
+.scada-kpi.kpi-warning { --kpi-color: var(--color-warning); }
+.scada-kpi.kpi-danger { --kpi-color: var(--color-danger); }
+.scada-kpi.kpi-modbus { --kpi-color: var(--color-modbus); }
+
+.kpi-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.kpi-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.kpi-value {
+  font-size: 24px;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.kpi-unit {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.kpi-trend {
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.kpi-trend.trend-up { color: var(--color-warning); }
+.kpi-trend.trend-down { color: var(--color-success); }
+.kpi-trend.trend-neutral { color: var(--text-muted); }
+
+/* SCADA Poste Card */
+.poste-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: transform var(--transition-fast), border-color var(--transition-fast);
+  cursor: pointer;
+}
+
+.poste-card:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+}
+
+.poste-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.poste-card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.poste-card-sub {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.poste-telemetry-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  background: var(--bg-input);
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+}
+
+.telem-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.telem-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.telem-val {
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+}
