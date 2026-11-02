@@ -1,6 +1,12 @@
 # Système de Monitoring Énergétique (SME) — Marsa Maroc (Port d'Agadir)
 ### Application de Démonstration Technique — Appel d'Offres n° 12/DEPA/2026
 
+> [!IMPORTANT]
+> **ACCÈS EN LIGNE (GITHUB PAGES) :**
+> - **URL de l'application en direct :** [https://salmasouileh7-eng.github.io/sme-marsa-maroc-demo/](https://salmasouileh7-eng.github.io/sme-marsa-maroc-demo/)
+> - **Dépôt GitHub source :** [https://github.com/salmasouileh7-eng/sme-marsa-maroc-demo](https://github.com/salmasouileh7-eng/sme-marsa-maroc-demo)
+> - **Mention d'honnêteté industrielle :** Données simulées — Démonstration technique (aucune connexion au réseau de production de Marsa Maroc).
+
 Cette application web est une démonstration front-end autonome et 100 % statique simulant le **Système de Monitoring Énergétique (SME)** pour les 6 postes électriques MT/BT de **Marsa Maroc — Direction de l'Exploitation au Port d'Agadir (DEPA)**, conformément aux exigences de la norme **ISO 50001 / ISO 50006**.
 
 ---
